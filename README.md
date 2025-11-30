@@ -183,5 +183,3 @@ Feel free to open issues or PRs to improve the email API, add templating, or ext
 ## 📝 License
 
 MIT — free to use, modify, and deploy.
-
----
