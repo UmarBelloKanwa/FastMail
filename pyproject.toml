@@ -1,5 +1,5 @@
 [project]
-name = "Fastapi Mail"
+name = "Fastapi-Mail"
 version = "0.1.0"
 requires-python = ">=3.10"
 dependencies = [
