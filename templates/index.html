@@ -1,133 +1,190 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <title>FastAPI Mail Service</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f7f7fb;
-            padding: 40px;
-            line-height: 1.7;
-            color: #333;
-        }
-        h1 {
-            font-size: 32px;
-            color: #4a4ae8;
-        }
-        h2 {
-            margin-top: 28px;
-            color: #3d3d3d;
-        }
-        code {
-            background: #eee;
-            padding: 4px 6px;
-            border-radius: 4px;
-            color: #d63384;
-        }
-        pre {
-            background: #1e1e1e;
-            color: #d4d4d4;
-            padding: 15px;
-            border-radius: 8px;
-            overflow-x: auto;
-            font-size: 15px;
-        }
-        .container {
-            max-width: 900px;
-            margin: auto;
-            background: white;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0px 4px 20px rgba(0,0,0,0.05);
-        }
-        .badge {
-            background: #4a4ae8;
-            color: white;
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 13px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 12px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: center;
-        }
-        th {
-            background: #f0f0f8;
-        }
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f7f7fb;
+        padding: 40px;
+        line-height: 1.7;
+        color: #333;
+      }
+      h1 {
+        font-size: 32px;
+        color: #4a4ae8;
+      }
+      h2 {
+        margin-top: 28px;
+        color: #3d3d3d;
+      }
+      code {
+        background: #eee;
+        padding: 4px 6px;
+        border-radius: 4px;
+        color: #d63384;
+      }
+      pre {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        padding: 15px;
+        border-radius: 8px;
+        overflow-x: auto;
+        font-size: 14px;
+      }
+      .container {
+        max-width: 900px;
+        margin: auto;
+        background: white;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.05);
+      }
+      .badge {
+        background: #4a4ae8;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 13px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 12px;
+      }
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 10px;
+        text-align: left;
+      }
+      th {
+        background: #f0f0f8;
+      }
     </style>
-</head>
-<body>
-<div class="container">
+  </head>
+  <body>
+    <div class="container">
+      <h1>📧 FastAPI Email Service</h1>
+      <p>
+        A standalone <strong>SMTP-sending microservice</strong> built on
+        <b>FastAPI</b> and <b>FastAPI-Mail</b>, meant to be deployed on a server
+        that supports outbound SMTP (e.g. a VM or container) so a serverless
+        main app that can't send SMTP directly can call it over HTTP instead.
+      </p>
 
-<h1>📧 FastAPI Email Service (Serverless on Vercel)</h1>
-
-<p>
-A lightweight <strong>serverless email-sending microservice</strong> built using 
-<b>FastAPI</b>, <b>FastAPI-Mail</b>, and deployed on <b>Vercel</b>.
-</p>
-
-<h2>🚀 Features</h2>
-<ul>
-    <li>SMTP email support</li>
-    <li>FastAPI + Mangum (serverless ready)</li>
-    <li>HTML template support</li>
-    <li>Pydantic models</li>
-    <li>Environment variable support</li>
-    <li>Easy integration with frontend/backend apps</li>
-</ul>
-
-<h2>📁 Project Structure</h2>
-<pre><code>project/
-├── service.py
+      <h2>📁 Project Structure</h2>
+      <pre><code>project/
+├── main.py
 ├── schema.py
-├── main.py 
-└── requirements.txt
+├── templates/
+│   ├── index.html
+│   └── welcome.html      (example Jinja2 template)
+├── requirements.txt
+└── .env.example
 </code></pre>
 
-<h2>✉️ API Endpoint</h2>
-<p><span class="badge">POST</span> <code>/send/email</code></p>
+      <h2>⚙️ Configuration</h2>
+      <p>
+        Copy <code>.env.example</code> to <code>.env</code> and fill in your
+        SMTP credentials. Every endpoint will use these as the default sender
+        config unless a request includes its own <code>config</code> object,
+        which lets a single deployment send on behalf of multiple accounts.
+      </p>
 
-<h3>Request Body</h3>
-<pre><code>{
-  "sender": { "...": "..." },
-  "receiver": { "...": "..." }
+      <h2>✉️ Endpoints</h2>
+
+      <p>
+        <span class="badge">GET</span> <code>/health</code> — liveness check
+      </p>
+
+      <p><span class="badge">POST</span> <code>/send/email</code></p>
+      <p>Plain/HTML email with optional base64 attachments.</p>
+      <pre><code>{
+  "config": { "...": "optional, falls back to env vars" },
+  "message": {
+    "recipients": ["someone@example.com"],
+    "subject": "Hello",
+    "body": "&lt;p&gt;Hi there&lt;/p&gt;",
+    "subtype": "html",
+    "cc": [], "bcc": [], "reply_to": [],
+    "attachments": [
+      { "filename": "invoice.pdf", "content_base64": "...", "content_type": "application/pdf" }
+    ]
+  }
 }
 </code></pre>
 
-<h2>⚙️ Environment Variables</h2>
-<pre><code>SMTP_USERNAME=you@example.com
-SMTP_PASSWORD=super_secret_password
-SMTP_PORT=587
-SMTP_SERVER=smtp.fastmail.com
-SMTP_FROM=you@example.com
+      <p>
+        <span class="badge">POST</span>
+        <code>/send/email/with-attachments</code>
+      </p>
+      <p>
+        Same as above, but as <code>multipart/form-data</code>: a
+        <code>message</code>
+        form field containing the same JSON (minus attachments), an optional
+        <code>config</code> form field, and one or more real <code>files</code>.
+        Cheaper than base64 for large attachments.
+      </p>
+
+      <p><span class="badge">POST</span> <code>/send/email/template</code></p>
+      <p>
+        Renders a Jinja2 template from <code>templates/</code> as the email
+        body.
+      </p>
+      <pre><code>{
+  "message": {
+    "recipients": ["someone@example.com"],
+    "subject": "Welcome!",
+    "template_body": { "name": "Ada", "message": "Thanks for signing up." }
+  },
+  "template_name": "welcome.html"
+}
 </code></pre>
 
-<h2>⚠️ Vercel Limitations</h2>
-<table>
-<tr><th>Feature</th><th>Supported</th></tr>
-<tr><td>SMTP Sending</td><td>✅</td></tr>
-<tr><td>HTML Email</td><td>✅</td></tr>
-<tr><td>Background Jobs</td><td>❌</td></tr>
-<tr><td>WebSockets</td><td>❌</td></tr>
-<tr><td>Persistent Files</td><td>❌</td></tr>
-</table>
+      <h2>⚠️ Notes</h2>
+      <table>
+        <tr>
+          <th>Feature</th>
+          <th>Supported</th>
+        </tr>
+        <tr>
+          <td>SMTP over STARTTLS / SSL</td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td>Plain &amp; HTML bodies</td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td>CC / BCC / Reply-To</td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td>Custom headers</td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td>Attachments (base64 or multipart)</td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td>Jinja2 templated emails</td>
+          <td>✅</td>
+        </tr>
+        <tr>
+          <td>Per-request sender config (multi-tenant)</td>
+          <td>✅</td>
+        </tr>
+      </table>
 
-<h2>🛠 Deploy</h2>
-<pre><code>vercel</code></pre>
+      <h2>🛠 Run</h2>
+      <pre><code>pip install -r requirements.txt
+uvicorn main:app --host 0.0.0.0 --port 5001 --reload</code></pre>
 
-<h2>🧪 Test Locally</h2>
-<pre><code>uvicorn main:app --reload</code></pre>
-
-<h2>📝 License</h2>
-<p>MIT — free to use, modify, and deploy.</p>
-
-</div>
-</body>
+      <h2>📝 License</h2>
+      <p>MIT — free to use, modify, and deploy.</p>
+    </div>
+  </body>
 </html>
