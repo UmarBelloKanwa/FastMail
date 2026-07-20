@@ -13,7 +13,7 @@ from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
 from fastapi_mail.errors import ConnectionErrors
 from starlette.datastructures import Headers
 from starlette.templating import Jinja2Templates
-from .endpoints import Endpoints
+from endpoints import Endpoints
 
 from schema import (
     ConnectionConfigIn,
