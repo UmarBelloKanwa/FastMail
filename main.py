@@ -13,6 +13,7 @@ from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
 from fastapi_mail.errors import ConnectionErrors
 from starlette.datastructures import Headers
 from starlette.templating import Jinja2Templates
+from .endpoints import Endpoints
 
 from schema import (
     ConnectionConfigIn,
@@ -158,12 +159,12 @@ async def home(request: Request):
     return templates.TemplateResponse(request, "index.html")
 
 
-@app.get("/health")
+@app.get(Endpoints.HEALTH)
 async def health():
     return {"status": "ok"}
 
 
-@app.post("/send/email", response_model=SendEmailResponse)
+@app.post(Endpoints.SEND_EMAIL, response_model=SendEmailResponse)
 async def send_email(payload: SendEmailRequest):
     """
     Send an email with a plain/html body and optional base64-encoded
@@ -189,7 +190,7 @@ async def send_email(payload: SendEmailRequest):
     )
 
 
-@app.post("/send/email/with-attachments", response_model=SendEmailResponse)
+@app.post(Endpoints.SEND_EMAIL_WITH_ATTACHMENTS, response_model=SendEmailResponse)
 async def send_email_with_attachments(
     message: str = Form(
         ..., description="JSON-encoded body matching the MessageIn schema (minus attachments)"
@@ -254,7 +255,7 @@ async def send_email_with_attachments(
     )
 
 
-@app.post("/send/email/template", response_model=SendEmailResponse)
+@app.post(Endpoints.SEND_TEMPLATE_EMAIL, response_model=SendEmailResponse)
 async def send_templated_email(payload: SendTemplateEmailRequest):
     """
     Render a Jinja2 template from the server's TEMPLATE_FOLDER
